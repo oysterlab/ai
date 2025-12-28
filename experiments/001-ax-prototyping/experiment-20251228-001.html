@@ -1,0 +1,2092 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AX Prototyping Experiment Archive</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap"
+    rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #FAFAF8;
+      --bg-warm: #F5F4F0;
+      --text: #1A1A1A;
+      --text-muted: #6B6B6B;
+      --text-light: #999999;
+      --accent: #3D4F5F;
+      --border: #E5E4E0;
+      --placeholder-start: #EAEAE6;
+      --placeholder-end: #DDDDD8;
+
+      --font-serif: 'Instrument Serif', Georgia, serif;
+      --font-sans: 'DM Sans', -apple-system, sans-serif;
+
+      --space-xs: 0.5rem;
+      --space-sm: 1rem;
+      --space-md: 2rem;
+      --space-lg: 4rem;
+      --space-xl: 8rem;
+      --space-2xl: 12rem;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      font-weight: 400;
+      font-size: 17px;
+      line-height: 1.7;
+      color: var(--text);
+      background-color: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Subtle noise texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.03;
+      z-index: 1000;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 var(--space-md);
+    }
+
+    .container--wide {
+      max-width: 1400px;
+    }
+
+    .container--narrow {
+      max-width: 800px;
+    }
+
+    /* Reveal animations */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-delay-1 {
+      transition-delay: 0.1s;
+    }
+
+    .reveal-delay-2 {
+      transition-delay: 0.2s;
+    }
+
+    .reveal-delay-3 {
+      transition-delay: 0.3s;
+    }
+
+    .reveal-delay-4 {
+      transition-delay: 0.4s;
+    }
+
+    /* ================================
+       BACK NAVIGATION
+    ================================ */
+    .back-nav {
+      position: fixed;
+      top: var(--space-md);
+      left: var(--space-md);
+      z-index: 100;
+      opacity: 0;
+      transform: translateX(-10px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      pointer-events: none;
+    }
+
+    .back-nav.visible {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    .back-nav__link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      transition: all 0.3s ease;
+    }
+
+    .back-nav__link:hover {
+      color: var(--text);
+      background: white;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .back-nav__link svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ================================
+       HERO SECTION
+    ================================ */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: var(--space-xl) 0;
+    }
+
+    .hero__label {
+      font-family: var(--font-sans);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: var(--space-lg);
+    }
+
+    .hero__title {
+      font-family: var(--font-serif);
+      font-size: clamp(3.5rem, 10vw, 7rem);
+      font-weight: 400;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: var(--space-md);
+    }
+
+    .hero__title em {
+      font-style: italic;
+    }
+
+    .hero__subtitle {
+      font-family: var(--font-serif);
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 400;
+      font-style: italic;
+      color: var(--text-muted);
+      margin-bottom: var(--space-xl);
+    }
+
+    .hero__description {
+      max-width: 480px;
+      font-size: 1rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+
+    .hero__scroll-hint {
+      position: absolute;
+      bottom: var(--space-lg);
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      color: var(--text-light);
+      text-transform: uppercase;
+      animation: float 2s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateX(-50%) translateY(0);
+      }
+
+      50% {
+        transform: translateX(-50%) translateY(8px);
+      }
+    }
+
+    /* ================================
+       CONTEXT SECTION
+    ================================ */
+    .context {
+      padding: var(--space-2xl) 0;
+      background: var(--bg-warm);
+    }
+
+    .context__header {
+      text-align: center;
+      margin-bottom: var(--space-xl);
+    }
+
+    .context__label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: var(--space-sm);
+    }
+
+    .context__title {
+      font-family: var(--font-serif);
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 400;
+    }
+
+    .context__description {
+      max-width: 600px;
+      margin: var(--space-md) auto 0;
+      font-size: 1.0625rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .context__comparison {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: var(--space-lg);
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      .context__comparison {
+        grid-template-columns: 1fr;
+        gap: var(--space-md);
+      }
+    }
+
+    .context__item {
+      text-align: center;
+    }
+
+    .context__item-label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: var(--space-sm);
+    }
+
+    .context__arrow {
+      font-family: var(--font-serif);
+      font-size: 2rem;
+      color: var(--text-light);
+    }
+
+    .context__image {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--border);
+    }
+
+    @media (max-width: 768px) {
+      .context__arrow {
+        transform: rotate(90deg);
+      }
+    }
+
+    /* ================================
+       RESOURCES SECTION
+    ================================ */
+    .resources {
+      padding: var(--space-lg) 0 var(--space-xl);
+      background: var(--bg-warm);
+      border-top: 1px solid var(--border);
+    }
+
+    .resources__header {
+      margin-bottom: var(--space-md);
+    }
+
+    .resources__label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: var(--space-xs);
+    }
+
+    .resources__title {
+      font-family: var(--font-serif);
+      font-size: clamp(1.25rem, 3vw, 1.5rem);
+      font-weight: 400;
+    }
+
+    .resources__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--space-md);
+    }
+
+    .resource-card {
+      background: white;
+      border-radius: 8px;
+      padding: var(--space-md);
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border: 1px solid var(--border);
+    }
+
+    .resource-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    .resource-card__icon {
+      width: 32px;
+      height: 32px;
+      margin-bottom: var(--space-sm);
+      color: var(--text-muted);
+    }
+
+    .resource-card__type {
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: var(--space-xs);
+    }
+
+    .resource-card__title {
+      font-family: var(--font-serif);
+      font-size: 1.125rem;
+      font-weight: 400;
+      margin-bottom: var(--space-xs);
+      line-height: 1.4;
+    }
+
+    .resource-card__description {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .resource-card__url {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin-top: var(--space-sm);
+      word-break: break-all;
+    }
+
+    /* Placeholder image */
+    .placeholder {
+      background: linear-gradient(135deg, var(--placeholder-start) 0%, var(--placeholder-end) 100%);
+      aspect-ratio: 16/9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-light);
+      font-size: 0.875rem;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .placeholder::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border: 1px solid rgba(0, 0, 0, 0.04);
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    /* ================================
+       PHASE SECTION
+    ================================ */
+    .phase {
+      padding: var(--space-2xl) 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .phase__header {
+      margin-bottom: var(--space-xl);
+    }
+
+    .phase__number {
+      font-family: var(--font-serif);
+      font-size: clamp(6rem, 15vw, 12rem);
+      font-weight: 400;
+      line-height: 0.85;
+      color: var(--border);
+      margin-bottom: var(--space-sm);
+      letter-spacing: -0.03em;
+    }
+
+    .phase__title {
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 400;
+      margin-bottom: var(--space-sm);
+    }
+
+    .phase__description {
+      max-width: 600px;
+      color: var(--text-muted);
+      font-size: 1.0625rem;
+    }
+
+    /* ================================
+       ATTEMPTS CAROUSEL
+    ================================ */
+    .attempts {
+      margin: var(--space-lg) 0;
+      position: relative;
+    }
+
+    .attempts__track {
+      display: flex;
+      gap: var(--space-md);
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      padding: var(--space-sm) 0;
+      margin: 0 calc(-1 * var(--space-md));
+      padding-left: var(--space-md);
+      padding-right: var(--space-md);
+    }
+
+    .attempts__track::-webkit-scrollbar {
+      display: none;
+    }
+
+    .attempt {
+      flex: 0 0 min(90vw, 700px);
+      scroll-snap-align: center;
+      background: white;
+      border-radius: 8px;
+      padding: var(--space-lg);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.04);
+      transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        box-shadow 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        filter 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      opacity: 0.4;
+      filter: blur(2px);
+    }
+
+    .attempt.active {
+      opacity: 1;
+      filter: blur(0);
+      transform: scale(1.02);
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .attempt:hover {
+      opacity: 0.8;
+    }
+
+    .attempt.active:hover {
+      opacity: 1;
+      transform: scale(1.02) translateY(-4px);
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
+    }
+
+    .attempt__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: var(--space-md);
+    }
+
+    .attempt__label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .attempt__counter {
+      font-family: var(--font-serif);
+      font-size: 0.875rem;
+      color: var(--text-light);
+    }
+
+    .attempt__prompt-label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: var(--space-xs);
+    }
+
+    .attempt__prompt {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 1.125rem;
+      line-height: 1.6;
+      color: var(--text);
+      margin-bottom: var(--space-md);
+      padding-left: var(--space-sm);
+      border-left: 2px solid var(--border);
+    }
+
+    .attempt__prompt strong {
+      color: var(--accent);
+      font-weight: 500;
+      font-style: normal;
+    }
+
+    .attempt__prompt a {
+      color: var(--accent);
+      font-weight: 500;
+      font-style: normal;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      transition: opacity 0.2s ease;
+    }
+
+    .attempt__prompt a:hover {
+      opacity: 0.7;
+    }
+
+    .attempt__result-label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: var(--space-xs);
+    }
+
+    /* Carousel Navigation */
+    .attempts__nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: var(--space-md);
+      margin-top: var(--space-md);
+    }
+
+    .attempts__dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .attempts__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+    .attempts__dot.active {
+      background: var(--text);
+      transform: scale(1.2);
+    }
+
+    .attempts__arrow {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      color: var(--text-muted);
+    }
+
+    .attempts__arrow:hover {
+      background: var(--text);
+      color: white;
+      border-color: var(--text);
+    }
+
+    .attempts__arrow svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ================================
+       INSIGHT BLOCK
+    ================================ */
+    .insight {
+      margin: var(--space-xl) 0;
+      padding: var(--space-lg);
+      background: var(--bg-warm);
+      border-radius: 8px;
+    }
+
+    .insight__label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: var(--space-sm);
+    }
+
+    .insight__text {
+      font-family: var(--font-serif);
+      font-size: 1.25rem;
+      line-height: 1.7;
+      color: var(--text);
+      max-width: 700px;
+    }
+
+    .insight__text strong {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .transition__text strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .judgment__text strong {
+      color: white;
+      font-weight: 500;
+    }
+
+    /* ================================
+       PHASE TRANSITION
+    ================================ */
+    .transition {
+      padding: var(--space-2xl) 0;
+      text-align: center;
+    }
+
+    .transition__divider {
+      width: 1px;
+      height: 80px;
+      background: var(--border);
+      margin: 0 auto var(--space-lg);
+    }
+
+    .transition__limitation {
+      margin-bottom: var(--space-lg);
+    }
+
+    .transition__label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: var(--space-xs);
+    }
+
+    .transition__text {
+      font-size: 1.0625rem;
+      color: var(--text-muted);
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .transition__arrow {
+      font-family: var(--font-serif);
+      font-size: 2rem;
+      color: var(--text-light);
+      margin: var(--space-md) 0;
+    }
+
+    .transition__next {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      font-style: italic;
+      color: var(--text);
+    }
+
+    /* ================================
+       JUDGMENT SECTION
+    ================================ */
+    .judgment {
+      padding: var(--space-2xl) 0;
+      background: var(--text);
+      color: white;
+    }
+
+    .judgment__header {
+      margin-bottom: var(--space-xl);
+    }
+
+    .judgment__label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: var(--space-sm);
+    }
+
+    .judgment__title {
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 400;
+    }
+
+    .judgment__list {
+      list-style: none;
+      margin-bottom: var(--space-xl);
+    }
+
+    .judgment__item {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: var(--space-md);
+      padding: var(--space-md) 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .judgment__number {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    .judgment__text {
+      font-size: 1.125rem;
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .judgment__questions {
+      margin-top: var(--space-xl);
+    }
+
+    .judgment__questions-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: var(--space-md);
+    }
+
+    .judgment__question {
+      font-family: var(--font-serif);
+      font-size: 1.125rem;
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: var(--space-sm);
+      padding-left: var(--space-md);
+      position: relative;
+    }
+
+    .judgment__question::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* ================================
+       FOOTER
+    ================================ */
+    .footer {
+      padding: var(--space-lg) 0;
+      background: var(--text);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .footer__content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.875rem;
+    }
+
+    @media (max-width: 768px) {
+      .footer__content {
+        flex-direction: column;
+        gap: var(--space-sm);
+        text-align: center;
+      }
+    }
+
+    /* ================================
+       TABLE OF CONTENTS (FLOATING NAV)
+    ================================ */
+    .toc {
+      position: fixed;
+      right: var(--space-md);
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
+
+    .toc.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .toc.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .toc__item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-muted);
+      transition: color 0.3s ease;
+      justify-content: flex-end;
+    }
+
+    .toc__item:hover {
+      color: var(--text);
+    }
+
+    .toc__item.active {
+      color: var(--text);
+    }
+
+    .toc__label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      opacity: 0;
+      transform: translateX(10px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .toc__item:hover .toc__label,
+    .toc__item.active .toc__label {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .toc__dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1.5px solid currentColor;
+      background: transparent;
+      transition: background 0.3s ease, transform 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .toc__item.active .toc__dot {
+      background: currentColor;
+      transform: scale(1.2);
+    }
+
+    @media (max-width: 1024px) {
+      .toc {
+        right: var(--space-sm);
+      }
+
+      .toc__label {
+        display: none;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .toc {
+        display: none;
+      }
+    }
+
+    /* ================================
+       COMPARISON MODAL
+    ================================ */
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .modal.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+    }
+
+    .modal__content {
+      position: relative;
+      z-index: 1;
+      width: 90%;
+      max-width: 1200px;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: var(--bg);
+      border-radius: 12px;
+      padding: var(--space-lg);
+      transform: scale(0.95) translateY(20px);
+      transition: transform 0.3s ease;
+    }
+
+    .modal.open .modal__content {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal__close {
+      position: absolute;
+      top: var(--space-md);
+      right: var(--space-md);
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: color 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal__close:hover {
+      color: var(--text);
+    }
+
+    .modal__close svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .modal__header {
+      margin-bottom: var(--space-md);
+    }
+
+    .modal__label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: var(--space-xs);
+    }
+
+    .modal__title {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      font-weight: 400;
+    }
+
+    .modal__comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+      margin-bottom: var(--space-md);
+    }
+
+    @media (max-width: 768px) {
+      .modal__comparison {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .modal__image-container {
+      text-align: center;
+    }
+
+    .modal__image-label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: var(--space-xs);
+    }
+
+    .modal__image {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .modal__prompt {
+      margin-top: var(--space-md);
+      padding: var(--space-md);
+      background: var(--bg-warm);
+      border-radius: 8px;
+    }
+
+    .modal__prompt-label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: var(--space-xs);
+    }
+
+    .modal__prompt-text {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 1.125rem;
+      line-height: 1.6;
+      color: var(--text);
+    }
+
+    /* Make attempt cards clickable */
+    .attempt {
+      cursor: pointer;
+    }
+
+    /* Result Image */
+    .attempt__result-image {
+      width: 100%;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    /* ================================
+       RESPONSIVE ADJUSTMENTS
+    ================================ */
+    @media (max-width: 768px) {
+      :root {
+        --space-lg: 3rem;
+        --space-xl: 5rem;
+        --space-2xl: 8rem;
+      }
+
+      .phase__number {
+        font-size: 5rem;
+      }
+
+      .attempt {
+        flex: 0 0 calc(100vw - 3rem);
+        padding: var(--space-md);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- BACK NAVIGATION -->
+  <nav class="back-nav" id="back-nav">
+    <a href="../../index.html" class="back-nav__link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7" />
+      </svg>
+      <span>All Experiments</span>
+    </a>
+  </nav>
+
+  <!-- TABLE OF CONTENTS -->
+  <nav class="toc" id="toc">
+    <a href="#hero" class="toc__item" data-section="hero">
+      <span class="toc__label">Intro</span>
+      <span class="toc__dot"></span>
+    </a>
+    <a href="#context" class="toc__item" data-section="context">
+      <span class="toc__label">Context</span>
+      <span class="toc__dot"></span>
+    </a>
+    <a href="#phase-01" class="toc__item" data-section="phase-01">
+      <span class="toc__label">Phase 01</span>
+      <span class="toc__dot"></span>
+    </a>
+    <a href="#phase-02" class="toc__item" data-section="phase-02">
+      <span class="toc__label">Phase 02</span>
+      <span class="toc__dot"></span>
+    </a>
+    <a href="#phase-03" class="toc__item" data-section="phase-03">
+      <span class="toc__label">Phase 03</span>
+      <span class="toc__dot"></span>
+    </a>
+    <a href="#judgment" class="toc__item" data-section="judgment">
+      <span class="toc__label">Judgment</span>
+      <span class="toc__dot"></span>
+    </a>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <p class="hero__label reveal">Exploration #001</p>
+      <h1 class="hero__title reveal reveal-delay-1">
+        AX <em>Prototyping</em>
+      </h1>
+      <p class="hero__subtitle reveal reveal-delay-2">Design into Prototype</p>
+      <p class="hero__description reveal reveal-delay-3">
+        디자인 이미지와 설명만으로 UI를 정확히 업데이트 할 수 있는가?
+      </p>
+    </div>
+    <div class="hero__scroll-hint">Scroll</div>
+  </section>
+
+  <!-- CONTEXT SECTION -->
+  <section class="context" id="context">
+    <div class="container container--wide">
+      <div class="context__header reveal">
+        <p class="context__label">The Challenge</p>
+        <h2 class="context__title">Before & Target</h2>
+        <p class="context__description reveal reveal-delay-1">
+          클론 프로젝트의 첫 번째 콘텐츠 Row를 Target 디자인의 첫 번째 Row 스타일로 변경
+        </p>
+      </div>
+
+      <div class="context__comparison">
+        <div class="context__item reveal reveal-delay-1">
+          <p class="context__item-label">Before</p>
+          <img src="images/before.png" alt="Before - 시작 상태" class="context__image">
+        </div>
+
+        <div class="context__arrow reveal reveal-delay-2">→</div>
+
+        <div class="context__item reveal reveal-delay-3">
+          <p class="context__item-label">Target</p>
+          <img src="images/target.png" alt="Target - 목표 상태" class="context__image">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESOURCES SECTION -->
+  <section class="resources">
+    <div class="container">
+      <div class="resources__header reveal">
+        <p class="resources__label">References</p>
+        <h2 class="resources__title">Resources & Sources</h2>
+      </div>
+
+      <div class="resources__grid">
+        <!-- Source Code -->
+        <a href="https://github.com/JosinJojy/Netflix-reactjs" target="_blank" rel="noopener"
+          class="resource-card reveal reveal-delay-1">
+          <svg class="resource-card__icon" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+          </svg>
+          <p class="resource-card__type">Source Code</p>
+          <h3 class="resource-card__title">Netflix Clone - React.js</h3>
+          <p class="resource-card__description">실험에 사용된 기본 프로젝트. React.js로 구현된 Netflix UI 클론.</p>
+          <p class="resource-card__url">github.com/JosinJojy/Netflix-reactjs</p>
+        </a>
+
+        <!-- Target Design -->
+        <a href="https://youtu.be/b4mfKi4Yb2E?si=15ReQBjRsvwgadE2&t=25" target="_blank" rel="noopener"
+          class="resource-card reveal reveal-delay-2">
+          <svg class="resource-card__icon" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+          </svg>
+          <p class="resource-card__type">Target Design</p>
+          <h3 class="resource-card__title">Netflix UI Reference</h3>
+          <p class="resource-card__description">타겟 디자인으로 사용된 Netflix UI 영상 레퍼런스. 0:25 시점의 UI를 목표로 설정.</p>
+          <p class="resource-card__url">youtu.be/b4mfKi4Yb2E</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE 01 -->
+  <section class="phase" id="phase-01">
+    <div class="container">
+      <div class="phase__header">
+        <div class="phase__number reveal">01</div>
+        <h2 class="phase__title reveal reveal-delay-1">Basic Prompting</h2>
+        <p class="phase__description reveal reveal-delay-2">
+          기본 모델(Claude Opus 4.5)에 target 디자인 이미지와 자연어 설명만으로 비주얼 업데이트 시도
+        </p>
+      </div>
+
+      <div class="attempts reveal reveal-delay-3">
+        <div class="attempts__track" data-carousel="phase-01">
+
+          <!-- Attempt 1 -->
+          <article class="attempt">
+            <div class="attempt__header">
+              <span class="attempt__label">Attempt</span>
+              <span class="attempt__counter">1 / 3</span>
+            </div>
+            <p class="attempt__prompt-label">Prompt</p>
+            <blockquote class="attempt__prompt">
+              "[Image #1] 이미지를 참고해서 현재 홈의 첫번째 로우를 <strong>사진과 똑같은 디자인</strong>으로 반영해줘."
+            </blockquote>
+            <p class="attempt__result-label">Result</p>
+            <img src="images/attemp1_1_3_result.png" alt="Phase 01 Attempt 1 결과" class="attempt__result-image">
+          </article>
+
+          <!-- Attempt 2 -->
+          <article class="attempt">
+            <div class="attempt__header">
+              <span class="attempt__label">Attempt</span>
+              <span class="attempt__counter">2 / 3</span>
+            </div>
+            <p class="attempt__prompt-label">Prompt</p>
+            <blockquote class="attempt__prompt">
+              "[Image #1] <strong>폰트 라인이 너무 두꺼워.</strong> <strong>숫자 크기</strong>도 맞지 않아. <strong>간격</strong>도 target
+              이미지와 차이가 많이나."
+            </blockquote>
+            <p class="attempt__result-label">Result</p>
+            <img src="images/attemp1_2_3_result.png" alt="Phase 01 Attempt 2 결과" class="attempt__result-image">
+          </article>
+
+          <!-- Attempt 3 -->
+          <article class="attempt">
+            <div class="attempt__header">
+              <span class="attempt__label">Attempt</span>
+              <span class="attempt__counter">3 / 3</span>
+            </div>
+            <p class="attempt__prompt-label">Prompt</p>
+            <blockquote class="attempt__prompt">
+              "[Image #1] <strong>여전히 숫자 폰트가 썸네일 이미지에 비해 너무 크고</strong> 각 아이템의 <strong>간격이 target 이미지와 달라.</strong>"
+            </blockquote>
+            <p class="attempt__result-label">Result</p>
+            <img src="images/attemp1_3_3_result.png" alt="Phase 01 Attempt 3 결과" class="attempt__result-image">
+          </article>
+
+        </div>
+
+        <nav class="attempts__nav">
+          <button class="attempts__arrow" data-dir="prev" aria-label="Previous">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <div class="attempts__dots">
+            <button class="attempts__dot active" data-index="0" aria-label="Slide 1"></button>
+            <button class="attempts__dot" data-index="1" aria-label="Slide 2"></button>
+            <button class="attempts__dot" data-index="2" aria-label="Slide 3"></button>
+          </div>
+          <button class="attempts__arrow" data-dir="next" aria-label="Next">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+        </nav>
+      </div>
+
+      <div class="insight reveal">
+        <p class="insight__label">Insight</p>
+        <p class="insight__text">
+          참고 이미지의 <strong>큰 특징은 잘 반영</strong>했으나, <strong>세부 디테일은 반복 요청에도 정확히 반영되지 않았다.</strong>
+          모델 성능보다는 <strong>디자인 의도 전달 방식</strong>의 문제일 가능성이 있다.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE TRANSITION 01 → 02 -->
+  <section class="transition">
+    <div class="container container--narrow">
+      <div class="transition__divider reveal"></div>
+
+      <div class="transition__limitation reveal reveal-delay-1">
+        <p class="transition__label">Phase 01의 한계</p>
+        <p class="transition__text">
+          <strong>UX/UI 전문 용어</strong>와 <strong>구조화된 프롬프트</strong>를 활용하면 정확도를 높일 수 있는지 검증이 필요하다.
+        </p>
+      </div>
+
+      <div class="transition__arrow reveal reveal-delay-2">↓</div>
+
+      <p class="transition__next reveal reveal-delay-3">Phase 02로 전환</p>
+    </div>
+  </section>
+
+  <!-- PHASE 02 -->
+  <section class="phase" id="phase-02">
+    <div class="container">
+      <div class="phase__header">
+        <div class="phase__number reveal">02</div>
+        <h2 class="phase__title reveal reveal-delay-1">Subagent Prompting</h2>
+        <p class="phase__description reveal reveal-delay-2">
+          UX/UI 전문 subagent 프롬프트를 활용한 구조화된 프롬프팅으로 정확도 향상 시도
+        </p>
+      </div>
+
+      <div class="attempts reveal reveal-delay-3">
+        <div class="attempts__track" data-carousel="phase-02">
+
+          <!-- Attempt 1 -->
+          <article class="attempt">
+            <div class="attempt__header">
+              <span class="attempt__label">Attempt</span>
+              <span class="attempt__counter">1 / 3</span>
+            </div>
+            <p class="attempt__prompt-label">Prompt</p>
+            <blockquote class="attempt__prompt">
+              "<a href="https://github.com/SuperClaude-Org/SuperClaude_Framework?tab=readme-ov-file#-all-30-commands"
+                target="_blank" rel="noopener">/sc:design</a> <a href="https://github.com/SuperClaude-Org/SuperClaude_Framework/blob/master/docs/user-guide/flags.md#core-analysis-flags" target="_blank" rel="noopener">--think</a> [Image #1] 이미지를 참고해서 현재 홈의 첫번째 로우를 <strong>사진과 똑같은
+                디자인</strong>으로 반영해줘."
+            </blockquote>
+            <p class="attempt__result-label">Result</p>
+            <img src="images/attemp2_1_3_result.png" alt="Phase 02 Attempt 1 결과" class="attempt__result-image">
+          </article>
+
+          <!-- Attempt 2 -->
+          <article class="attempt">
+            <div class="attempt__header">
+              <span class="attempt__label">Attempt</span>
+              <span class="attempt__counter">2 / 3</span>
+            </div>
+            <p class="attempt__prompt-label">Prompt</p>
+            <blockquote class="attempt__prompt">
+              "<a href="https://github.com/SuperClaude-Org/SuperClaude_Framework?tab=readme-ov-file#-all-30-commands"
+                target="_blank" rel="noopener">/sc:design</a> <a href="https://github.com/SuperClaude-Org/SuperClaude_Framework/blob/master/docs/user-guide/flags.md#core-analysis-flags" target="_blank" rel="noopener">--think</a> [Image #1] <strong>숫자 폰트의 크기</strong>가 target
+              이미지보다 작아. 그리고 <strong>썸네일과의 겹침 정도</strong>도 차이가 많이 나. <strong>아이템 간 간격</strong>도 target 이미지와 달라."
+            </blockquote>
+            <p class="attempt__result-label">Result</p>
+            <img src="images/attemp2_2_3_result.png" alt="Phase 02 Attempt 2 결과" class="attempt__result-image">
+          </article>
+
+          <!-- Attempt 3 -->
+          <article class="attempt">
+            <div class="attempt__header">
+              <span class="attempt__label">Attempt</span>
+              <span class="attempt__counter">3 / 3</span>
+            </div>
+            <p class="attempt__prompt-label">Prompt</p>
+            <blockquote class="attempt__prompt">
+              "<a href="https://github.com/SuperClaude-Org/SuperClaude_Framework?tab=readme-ov-file#-all-30-commands"
+                target="_blank" rel="noopener">/sc:design</a> <a href="https://github.com/SuperClaude-Org/SuperClaude_Framework/blob/master/docs/user-guide/flags.md#core-analysis-flags" target="_blank" rel="noopener">--think</a> [Image #1] <strong>아이템 간 간격이 너무 좁고</strong>,
+              <strong>숫자 폰트의 높이가 썸네일과 같아야 하는데 약간 다르며</strong>, 숫자의 위치도 썸네일보다 약간 아래에 있어. target 이미지를 보고 다시 수정해줘."
+            </blockquote>
+            <p class="attempt__result-label">Result</p>
+            <img src="images/attemp2_3_3_result.png" alt="Phase 02 Attempt 3 결과" class="attempt__result-image">
+          </article>
+
+        </div>
+
+        <nav class="attempts__nav">
+          <button class="attempts__arrow" data-dir="prev" aria-label="Previous">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <div class="attempts__dots">
+            <button class="attempts__dot active" data-index="0" aria-label="Slide 1"></button>
+            <button class="attempts__dot" data-index="1" aria-label="Slide 2"></button>
+            <button class="attempts__dot" data-index="2" aria-label="Slide 3"></button>
+          </div>
+          <button class="attempts__arrow" data-dir="next" aria-label="Next">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+        </nav>
+      </div>
+
+      <div class="insight reveal">
+        <p class="insight__label">Insight</p>
+        <p class="insight__text">
+          UX/UI 전문 프롬프트 없이 진행한 첫 번째 시도보다 <strong>준수한 결과</strong>를 얻었으나, <strong>반복 요청을 통한 디테일 보정에는 여전히 한계</strong>가 있었다.
+          AI가 <strong>업데이트된 화면을 직접 확인하지 못해</strong> 발생하는 문제일 수 있다.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PHASE TRANSITION 02 → 03 -->
+  <section class="transition">
+    <div class="container container--narrow">
+      <div class="transition__divider reveal"></div>
+
+      <div class="transition__limitation reveal reveal-delay-1">
+        <p class="transition__label">Phase 02의 한계</p>
+        <p class="transition__text">
+          AI가 업데이트한 화면을 <strong>직접 확인하며 이터레이션</strong>할 때 정확도가 높아지는지 검증이 필요하다.
+        </p>
+      </div>
+
+      <div class="transition__arrow reveal reveal-delay-2">↓</div>
+
+      <p class="transition__next reveal reveal-delay-3">Phase 03으로 전환</p>
+    </div>
+  </section>
+
+  <!-- PHASE 03 -->
+  <section class="phase" id="phase-03">
+    <div class="container">
+      <div class="phase__header">
+        <div class="phase__number reveal">03</div>
+        <h2 class="phase__title reveal reveal-delay-1">Visual Iteration</h2>
+        <p class="phase__description reveal reveal-delay-2">
+          MCP Playwright를 활용하여 AI가 업데이트된 화면을 직접 확인하며 이터레이션하는 방식 시도
+        </p>
+      </div>
+
+      <div class="attempts reveal reveal-delay-3">
+        <div class="attempts__track" data-carousel="phase-03">
+
+          <!-- Attempt 1 -->
+          <article class="attempt">
+            <div class="attempt__header">
+              <span class="attempt__label">Attempt</span>
+              <span class="attempt__counter">1 / 3</span>
+            </div>
+            <p class="attempt__prompt-label">Prompt</p>
+            <blockquote class="attempt__prompt">
+              "<a href="https://github.com/SuperClaude-Org/SuperClaude_Framework?tab=readme-ov-file#-all-30-commands"
+                target="_blank" rel="noopener">/sc:design</a> <a href="https://github.com/SuperClaude-Org/SuperClaude_Framework/blob/master/docs/user-guide/flags.md#core-analysis-flags" target="_blank" rel="noopener">--think</a> <a
+                href="https://github.com/SuperClaude-Org/SuperClaude_Framework/blob/master/docs/user-guide/flags.md#execution-control"
+                target="_blank" rel="noopener">--frontend-verify</a> <a
+                href="https://github.com/SuperClaude-Org/SuperClaude_Framework/blob/master/docs/user-guide/flags.md#mcp-server-flags"
+                target="_blank" rel="noopener">--playwright</a> [Image #1] 이미지를 참고해서 현재 홈의 첫번째 로우를 <strong>사진과 똑같은
+                디자인</strong>으로 반영해줘."
+            </blockquote>
+            <p class="attempt__result-label">Result</p>
+            <img src="images/attemp3_1_3_result.png" alt="Phase 03 Attempt 1 결과" class="attempt__result-image">
+          </article>
+
+          <!-- Attempt 2 -->
+          <article class="attempt">
+            <div class="attempt__header">
+              <span class="attempt__label">Attempt</span>
+              <span class="attempt__counter">2 / 3</span>
+            </div>
+            <p class="attempt__prompt-label">Prompt</p>
+            <blockquote class="attempt__prompt">
+              "<a href="https://github.com/SuperClaude-Org/SuperClaude_Framework?tab=readme-ov-file#-all-30-commands"
+                target="_blank" rel="noopener">/sc:design</a> <a href="https://github.com/SuperClaude-Org/SuperClaude_Framework/blob/master/docs/user-guide/flags.md#core-analysis-flags" target="_blank" rel="noopener">--think</a> <a
+                href="https://github.com/SuperClaude-Org/SuperClaude_Framework/blob/master/docs/user-guide/flags.md#execution-control"
+                target="_blank" rel="noopener">--frontend-verify</a> <a
+                href="https://github.com/SuperClaude-Org/SuperClaude_Framework/blob/master/docs/user-guide/flags.md#mcp-server-flags"
+                target="_blank" rel="noopener">--playwright</a> [Image #1] <strong>숫자 폰트의 높이가 썸네일과 같아야 하는데 다르다.</strong>
+              <strong>썸네일과 겹쳐 있는 정도</strong>도 차이가 있고 <strong>아이템 간 간격</strong>도 이미지와 다르다. 똑같이 맞춰줘."
+            </blockquote>
+            <p class="attempt__result-label">Result</p>
+            <img src="images/attemp3_2_3_result.png" alt="Phase 03 Attempt 2 결과" class="attempt__result-image">
+          </article>
+
+          <!-- Attempt 3 -->
+          <article class="attempt">
+            <div class="attempt__header">
+              <span class="attempt__label">Attempt</span>
+              <span class="attempt__counter">3 / 3</span>
+            </div>
+            <p class="attempt__prompt-label">Prompt</p>
+            <blockquote class="attempt__prompt">
+              "<a href="https://github.com/SuperClaude-Org/SuperClaude_Framework?tab=readme-ov-file#-all-30-commands"
+                target="_blank" rel="noopener">/sc:design</a> <a href="https://github.com/SuperClaude-Org/SuperClaude_Framework/blob/master/docs/user-guide/flags.md#core-analysis-flags" target="_blank" rel="noopener">--think</a> <a
+                href="https://github.com/SuperClaude-Org/SuperClaude_Framework/blob/master/docs/user-guide/flags.md#execution-control"
+                target="_blank" rel="noopener">--frontend-verify</a> <a
+                href="https://github.com/SuperClaude-Org/SuperClaude_Framework/blob/master/docs/user-guide/flags.md#mcp-server-flags"
+                target="_blank" rel="noopener">--playwright</a> [Image #1] 좋아. 이제 <strong>숫자의 높이만 이미지와 똑같이 썸네일의 높이와
+                맞추면</strong> 될 것 같아. <strong>보이는 숫자의 영역이 썸네일의 높이와 같아야 해.</strong> 이미지를 참고해."
+            </blockquote>
+            <p class="attempt__result-label">Result</p>
+            <img src="images/attemp3_3_3_result.png" alt="Phase 03 Attempt 3 결과" class="attempt__result-image">
+          </article>
+
+        </div>
+
+        <nav class="attempts__nav">
+          <button class="attempts__arrow" data-dir="prev" aria-label="Previous">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <div class="attempts__dots">
+            <button class="attempts__dot active" data-index="0" aria-label="Slide 1"></button>
+            <button class="attempts__dot" data-index="1" aria-label="Slide 2"></button>
+            <button class="attempts__dot" data-index="2" aria-label="Slide 3"></button>
+          </div>
+          <button class="attempts__arrow" data-dir="next" aria-label="Next">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+        </nav>
+      </div>
+
+      <div class="insight reveal">
+        <p class="insight__label">Insight</p>
+        <p class="insight__text">
+          업데이트된 화면을 AI가 직접 확인하도록 했을 때 <strong>폰트 굵기 등 더 세밀한 디자인 요소를 반영</strong>했으나,
+          <strong>폰트 높이와 썸네일 높이를 정확히 일치시키는 수준의 정밀한 조정에는 여전히 한계</strong>가 있었다.
+          <strong>Claude Opus 4.5의 비주얼 해석 능력</strong>의 한계일 수 있다.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- JUDGMENT SECTION -->
+  <section class="judgment" id="judgment">
+    <div class="container">
+      <div class="judgment__header">
+        <p class="judgment__label reveal">Conclusion</p>
+        <h2 class="judgment__title reveal reveal-delay-1">Judgment</h2>
+      </div>
+
+      <ul class="judgment__list">
+        <li class="judgment__item reveal reveal-delay-2">
+          <span class="judgment__number">01</span>
+          <p class="judgment__text">
+            Claude Code Opus 4.5를 통한 디자인 업데이트는 <strong>큰 특징 반영은 꽤 잘해냈다.</strong>
+          </p>
+        </li>
+        <li class="judgment__item reveal reveal-delay-3">
+          <span class="judgment__number">02</span>
+          <p class="judgment__text">
+            하지만 <strong>디테일한 요소</strong>는 subagent UX/UI 전문 프롬프팅과 MCP 비주얼 이터레이션을 사용하여도 <strong>한계가 있었다.</strong>
+          </p>
+        </li>
+        <li class="judgment__item reveal reveal-delay-4">
+          <span class="judgment__number">03</span>
+          <p class="judgment__text">
+            디테일 요소를 정확하게 반영하기 위한 <strong>추가적인 방법이 필요하다.</strong>
+          </p>
+        </li>
+      </ul>
+
+      <div class="judgment__questions reveal">
+        <p class="judgment__questions-label">Open Questions</p>
+        <p class="judgment__question">비주얼의 해석 능력의 한계가 맞다면 어떻게 해결할 것인가?</p>
+        <p class="judgment__question">Figma에서 HTML 변환 후 코드 정보를 추가하여 프롬프팅?</p>
+        <p class="judgment__question">Nanobanana를 통한 디테일 요소 추출하여 반영?</p>
+        <p class="judgment__question">디테일이 필요한 부분은 사용자가 직접 스크린샷에 포인팅하여 프롬프팅?</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPARISON MODAL -->
+  <div class="modal" id="comparison-modal">
+    <div class="modal__backdrop"></div>
+    <div class="modal__content">
+      <button class="modal__close" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </button>
+
+      <div class="modal__header">
+        <p class="modal__label" id="modal-label">Phase 01 · Attempt 1</p>
+        <h3 class="modal__title">Result Comparison</h3>
+      </div>
+
+      <div class="modal__comparison">
+        <div class="modal__image-container">
+          <p class="modal__image-label">Result</p>
+          <img src="" alt="Result" class="modal__image" id="modal-result">
+        </div>
+        <div class="modal__image-container">
+          <p class="modal__image-label">Target</p>
+          <img src="images/target.png" alt="Target" class="modal__image" id="modal-target">
+        </div>
+      </div>
+
+      <div class="modal__prompt">
+        <p class="modal__prompt-label">Prompt</p>
+        <p class="modal__prompt-text" id="modal-prompt-text"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__content">
+        <p>AX Prototyping Experiment Archive</p>
+        <p>2025</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ================================
+    // SCROLL REVEAL ANIMATION
+    // ================================
+    const observerOptions = {
+      root: null,
+      rootMargin: '0px 0px -80px 0px',
+      threshold: 0.1
+    };
+
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.reveal').forEach(el => {
+      revealObserver.observe(el);
+    });
+
+    // ================================
+    // CAROUSEL FUNCTIONALITY
+    // ================================
+    document.querySelectorAll('.attempts').forEach(attemptSection => {
+      const track = attemptSection.querySelector('.attempts__track');
+      const dots = attemptSection.querySelectorAll('.attempts__dot');
+      const prevBtn = attemptSection.querySelector('[data-dir="prev"]');
+      const nextBtn = attemptSection.querySelector('[data-dir="next"]');
+      const cards = track.querySelectorAll('.attempt');
+
+      let currentIndex = 0;
+      const totalSlides = cards.length;
+
+      function updateDots() {
+        dots.forEach((dot, i) => {
+          dot.classList.toggle('active', i === currentIndex);
+        });
+      }
+
+      function updateActiveCard() {
+        cards.forEach((card, i) => {
+          card.classList.toggle('active', i === currentIndex);
+        });
+      }
+
+      function scrollToSlide(index) {
+        if (index < 0) index = 0;
+        if (index >= totalSlides) index = totalSlides - 1;
+
+        currentIndex = index;
+        const card = cards[index];
+        const trackRect = track.getBoundingClientRect();
+        const cardRect = card.getBoundingClientRect();
+        const scrollLeft = card.offsetLeft - track.offsetLeft;
+
+        track.scrollTo({
+          left: scrollLeft,
+          behavior: 'smooth'
+        });
+
+        updateDots();
+        updateActiveCard();
+      }
+
+      // Button navigation
+      prevBtn?.addEventListener('click', () => scrollToSlide(currentIndex - 1));
+      nextBtn?.addEventListener('click', () => scrollToSlide(currentIndex + 1));
+
+      // Dot navigation
+      dots.forEach((dot, i) => {
+        dot.addEventListener('click', () => scrollToSlide(i));
+      });
+
+      // Sync dots on scroll
+      let scrollTimeout;
+      track.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          const scrollLeft = track.scrollLeft;
+          let closestIndex = 0;
+          let closestDistance = Infinity;
+
+          cards.forEach((card, i) => {
+            const cardLeft = card.offsetLeft - track.offsetLeft;
+            const distance = Math.abs(scrollLeft - cardLeft);
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              closestIndex = i;
+            }
+          });
+
+          if (currentIndex !== closestIndex) {
+            currentIndex = closestIndex;
+            updateDots();
+            updateActiveCard();
+          }
+        }, 50);
+      });
+
+      // Initialize first card as active
+      updateActiveCard();
+    });
+
+    // ================================
+    // SMOOTH SCROLL FOR INTERNAL LINKS
+    // ================================
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+
+    // ================================
+    // TABLE OF CONTENTS
+    // ================================
+    const toc = document.getElementById('toc');
+    const tocItems = document.querySelectorAll('.toc__item');
+    const sections = ['hero', 'context', 'phase-01', 'phase-02', 'phase-03', 'judgment'];
+
+    // Auto-hide TOC after inactivity
+    let tocHideTimeout;
+    const TOC_HIDE_DELAY = 2000; // 2 seconds
+
+    function showToc() {
+      const scrollY = window.scrollY;
+      const heroHeight = document.getElementById('hero')?.offsetHeight || 0;
+
+      // Only show if past hero section
+      if (scrollY > heroHeight * 0.5) {
+        toc.classList.add('visible');
+        toc.classList.remove('hidden');
+
+        // Reset hide timer
+        clearTimeout(tocHideTimeout);
+        tocHideTimeout = setTimeout(() => {
+          toc.classList.add('hidden');
+        }, TOC_HIDE_DELAY);
+      }
+    }
+
+    function hideTocImmediately() {
+      toc.classList.remove('visible');
+      toc.classList.add('hidden');
+    }
+
+    // Show/hide TOC based on scroll position
+    function updateTocVisibility() {
+      const scrollY = window.scrollY;
+      const heroHeight = document.getElementById('hero')?.offsetHeight || 0;
+
+      if (scrollY > heroHeight * 0.5) {
+        showToc();
+      } else {
+        toc.classList.remove('visible');
+        toc.classList.remove('hidden');
+      }
+    }
+
+    // Update active section in TOC
+    function updateActiveSection() {
+      const scrollY = window.scrollY + window.innerHeight / 3;
+
+      let activeSection = sections[0];
+
+      sections.forEach(sectionId => {
+        const section = document.getElementById(sectionId);
+        if (section) {
+          const sectionTop = section.offsetTop;
+          if (scrollY >= sectionTop) {
+            activeSection = sectionId;
+          }
+        }
+      });
+
+      tocItems.forEach(item => {
+        const isActive = item.dataset.section === activeSection;
+        item.classList.toggle('active', isActive);
+      });
+    }
+
+    // Throttle scroll events
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateTocVisibility();
+          updateActiveSection();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+
+    // Initialize
+    updateTocVisibility();
+    updateActiveSection();
+
+    // ================================
+    // BACK NAVIGATION
+    // ================================
+    const backNav = document.getElementById('back-nav');
+
+    function updateBackNavVisibility() {
+      const scrollY = window.scrollY;
+      if (scrollY > 100) {
+        backNav.classList.add('visible');
+      } else {
+        backNav.classList.remove('visible');
+      }
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateBackNavVisibility();
+        });
+      }
+    });
+
+    updateBackNavVisibility();
+
+    // ================================
+    // KEYBOARD NAVIGATION
+    // ================================
+    // Store carousel controllers for each phase
+    const carouselControllers = {};
+
+    document.querySelectorAll('.attempts').forEach(attemptSection => {
+      const track = attemptSection.querySelector('.attempts__track');
+      const phaseId = track.dataset.carousel;
+      const cards = track.querySelectorAll('.attempt');
+      const dots = attemptSection.querySelectorAll('.attempts__dot');
+
+      carouselControllers[phaseId] = {
+        currentIndex: 0,
+        totalSlides: cards.length,
+        scrollToSlide: function (index) {
+          if (index < 0) index = 0;
+          if (index >= this.totalSlides) index = this.totalSlides - 1;
+
+          this.currentIndex = index;
+          const card = cards[index];
+          const scrollLeft = card.offsetLeft - track.offsetLeft;
+
+          track.scrollTo({
+            left: scrollLeft,
+            behavior: 'smooth'
+          });
+
+          // Update dots
+          dots.forEach((dot, i) => {
+            dot.classList.toggle('active', i === this.currentIndex);
+          });
+
+          // Update active card
+          cards.forEach((card, i) => {
+            card.classList.toggle('active', i === this.currentIndex);
+          });
+        },
+        next: function () {
+          this.scrollToSlide(this.currentIndex + 1);
+        },
+        prev: function () {
+          this.scrollToSlide(this.currentIndex - 1);
+        }
+      };
+    });
+
+    // Get current section index
+    let currentSectionIndex = 0;
+
+    function getCurrentSectionIndex() {
+      const scrollY = window.scrollY + window.innerHeight / 3;
+      let activeIndex = 0;
+
+      sections.forEach((sectionId, index) => {
+        const section = document.getElementById(sectionId);
+        if (section && scrollY >= section.offsetTop) {
+          activeIndex = index;
+        }
+      });
+
+      return activeIndex;
+    }
+
+    // Navigate to section by index
+    function navigateToSection(index) {
+      if (index < 0) index = 0;
+      if (index >= sections.length) index = sections.length - 1;
+
+      currentSectionIndex = index;
+      const sectionId = sections[index];
+      const section = document.getElementById(sectionId);
+
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    // Get carousel for current section
+    function getCurrentCarousel() {
+      const currentSection = sections[getCurrentSectionIndex()];
+
+      // Map section to carousel
+      const sectionToCarousel = {
+        'phase-01': 'phase-01',
+        'phase-02': 'phase-02',
+        'phase-03': 'phase-03'
+      };
+
+      const carouselId = sectionToCarousel[currentSection];
+      return carouselId ? carouselControllers[carouselId] : null;
+    }
+
+    // Scroll to make current carousel visible
+    function scrollToCurrentCarousel() {
+      const currentSection = sections[getCurrentSectionIndex()];
+      const sectionEl = document.getElementById(currentSection);
+
+      if (sectionEl) {
+        const attempts = sectionEl.querySelector('.attempts');
+        if (attempts) {
+          const rect = attempts.getBoundingClientRect();
+          const targetY = window.scrollY + rect.top - (window.innerHeight / 2) + (rect.height / 2);
+
+          window.scrollTo({
+            top: targetY,
+            behavior: 'smooth'
+          });
+        }
+      }
+    }
+
+    // Keyboard event listener
+    document.addEventListener('keydown', (e) => {
+      // Ignore if user is typing in an input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      // Show TOC on any arrow key press
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        showToc();
+      }
+
+      switch (e.key) {
+        case 'ArrowUp':
+          e.preventDefault();
+          currentSectionIndex = getCurrentSectionIndex();
+          navigateToSection(currentSectionIndex - 1);
+          break;
+
+        case 'ArrowDown':
+          e.preventDefault();
+          currentSectionIndex = getCurrentSectionIndex();
+          navigateToSection(currentSectionIndex + 1);
+          break;
+
+        case 'ArrowLeft':
+          e.preventDefault();
+          const prevCarousel = getCurrentCarousel();
+          if (prevCarousel) {
+            prevCarousel.prev();
+            // Scroll to make the carousel visible
+            scrollToCurrentCarousel();
+          }
+          break;
+
+        case 'ArrowRight':
+          e.preventDefault();
+          const nextCarousel = getCurrentCarousel();
+          if (nextCarousel) {
+            nextCarousel.next();
+            // Scroll to make the carousel visible
+            scrollToCurrentCarousel();
+          }
+          break;
+      }
+    });
+
+    // ================================
+    // COMPARISON MODAL
+    // ================================
+    const modal = document.getElementById('comparison-modal');
+    const modalBackdrop = modal.querySelector('.modal__backdrop');
+    const modalClose = modal.querySelector('.modal__close');
+    const modalLabel = document.getElementById('modal-label');
+    const modalPromptText = document.getElementById('modal-prompt-text');
+    const modalResult = document.getElementById('modal-result');
+
+    function openModal(attemptEl, phaseNumber, attemptNumber) {
+      const prompt = attemptEl.querySelector('.attempt__prompt')?.textContent?.trim() || '';
+
+      // Get the result image src from the attempt card
+      const resultImg = attemptEl.querySelector('.attempt__result-image');
+      const resultSrc = resultImg ? resultImg.src : '';
+
+      modalLabel.textContent = `Phase ${phaseNumber} · Attempt ${attemptNumber}`;
+      modalPromptText.textContent = prompt;
+      modalResult.src = resultSrc;
+      modalResult.alt = `Phase ${phaseNumber} Attempt ${attemptNumber} 결과`;
+
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    // Close modal on backdrop click
+    modalBackdrop.addEventListener('click', closeModal);
+    modalClose.addEventListener('click', closeModal);
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('open')) {
+        closeModal();
+      }
+    });
+
+    // Add click handlers to attempt cards
+    document.querySelectorAll('.phase').forEach(phaseSection => {
+      const phaseId = phaseSection.id;
+      const phaseNumber = phaseId.replace('phase-', '');
+
+      phaseSection.querySelectorAll('.attempt').forEach((attempt, index) => {
+        attempt.addEventListener('click', (e) => {
+          // Don't open modal if clicking on a link
+          if (e.target.tagName === 'A' || e.target.closest('a')) {
+            return;
+          }
+          openModal(attempt, phaseNumber, index + 1);
+        });
+      });
+    });
+  </script>
+
+</body>
+
+</html>
